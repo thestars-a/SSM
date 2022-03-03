@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>已分配管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        .layui-table-cell .layui-form-checkbox[lay-skin="primary"] {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .layui-table-cell {
+            height: auto;
+            line-height: 46px;
+            overflow: visible;
+            text-overflow: inherit;
+            white-space: normal;
+            word-break: break-all;
+
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">身份证号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="driverIdCard" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">车牌号</label>
+                            <div class="layui-input-inline">
+                                <input type="text"  name="carLicenseLateNumber" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        window.addEventListener("storage", function (e) {
+            if (e.newValue!=e.oldValue){
+                window.location.reload();
+            }
+        });
+        table.render({
+            elem: '#currentTableId',
+            url: '/assign/getAllAssigned',
+            method: 'post',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {field: 'id', width: 100, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                {field: 'driverUsername', width: 250, title: '司机姓名', align: "center"},
+                {field: 'driverIdCard', width: 250, title: '司机身份证号', align: "center"},
+                {field: 'carName', width: 250, title: '汽车名称', align: "center"},
+                {field: 'carLicenseLateNumber', width: 250, title: '车牌号', align: "center"},
+                {field: 'profit', width: 150, title: '盈利', align: "center"},
+                {title: '操作', minWidth: 120, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            request: {
+                pageName: 'curr', //页码的参数名称，默认：page
+                limitName: 'nums' //每页数据量的参数名，默认：limit
+            },
+            limits: [10, 15, 20],
+            page: true,
+            done:function (res) {
+                if (res=="no"){
+                    parent.window.location.href="http://localhost/pages/login.html";
+                }
+            }
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (inputData) {
+            inputData = inputData.field;
+            if (inputData.driverIdCard == '' && inputData.carLicenseLateNumber == '') {
+                window.location.href = "./assigned.html";
+            } else {
+                table.reload('currentTableId', {
+                    url: '/assign/searchAssigned',
+                    page: {
+                        curr: 1
+                    },
+                    where: {
+                        driverIdCard: inputData.driverIdCard,
+                        carLicenseLateNumber: inputData.carLicenseLateNumber
+                    }
+                });
+                $("input[name='driverIdCard']").val("");
+                $("input[name='carLicenseLateNumber']").val("");
+            }
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        //监听操作列(编辑和删除)
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'delete') {
+                // console.log(data)
+                let power = getCookie("power");
+                if (power=="2"){
+                    layer.msg("抱歉您的权限不足无法删除");
+                    $("#driverCheck").val("");
+                    $("#carCheck").val("");
+                }else{
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: '/assign/deleteOneAssign?' + new Date().getTime(),
+                            type: 'post',
+                            data: JSON.stringify(data),
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            success: function (data) {
+                                if (data.code == 1) {
+                                    layer.msg("删除成功", {time: 500});
+                                    table.reload('currentTableId');
+                                } else {
+                                    layer.msg("删除失败", {time: 500});
+                                }
+                            }
+                        })
+                        layer.close(index);
+                    });
+                }
+            }
+        });
+        table.on('rowDouble(currentTableFilter)', function(obj){
+            var data = obj.data;
+            let power = getCookie("power");
+            if (power=="2") {
+                layer.msg("抱歉您的权限不足无法双击修改盈利");
+            }else{
+                layer.open({
+                    type : 2,
+                    title : '添加资产',
+                    area : [ '500px', '500px' ],
+                    fix : false,
+                    content : 'assignedEdit.html',
+                    success:function(layero, index){
+                        var body = layer.getChildFrame('body', index);
+                        //获取子页面的元素，进行数据渲染
+                        body.contents().find("#assignId").val(data.id);
+                    },
+                    end : function() {
+                        table.reload('currentTableId', {
+                            page: {
+                                //有个小bug，如果最后一页数据满了，再添加就是新加一页，但跳转不会跳到那个新加的一页
+                                //解决方法获取当页数据发现满了跳转页码要+1，因为懒，这里不解决
+                                curr: $(".layui-laypage-last").html()
+                            }
+                        });
+                    }
+                })
+            }
+        });
+
+        function getCookie(name) {
+            var prefix = name + "="
+            var start = document.cookie.indexOf(prefix)
+            if (start == -1) {return null;}
+            var end = document.cookie.indexOf(";", start + prefix.length)
+            if (end == -1) {
+                end = document.cookie.length;
+            }
+            var value = document.cookie.substring(start + prefix.length, end)
+            return unescape(value);
+        }
+
+    });
+</script>
+
+<!--让表格ID自己增加从1开始-->
+<script type="text/html" id="indexTpl">
+    {{d.LAY_INDEX}}
+</script>
+</body>
+</html>

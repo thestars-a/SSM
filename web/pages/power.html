@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        .layui-table-cell {
+            height: 50px;
+            line-height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <p style="display: block;margin: 0 auto">您为最高权限0不可修改，单击修改,权限(1>2)</p>
+    <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+    <script type="text/html" id="currentTableBar">
+        <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+    </script>
+
+    <script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'table'], function () {
+            var $ = layui.jquery,
+                form = layui.form,
+                table = layui.table;
+
+            table.render({
+                elem: '#currentTableId',
+                url: '/power/getAllAdmin',
+                method: 'post',
+                cols: [[
+                    {field: 'id', width: 300, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                    {field: 'username', width: 385, title: '用户名', align: "center"},
+                    {field: 'password', width: 390, title: '密码', align: "center"},
+                    {field: 'permissions', width: 395, title: '权限', align: "center"}
+                ]]
+            });
+            table.on('row(currentTableFilter)', function(obj){
+                if (obj.data.permissions=='1'){
+                    var test={
+                        permissions:2
+                    }
+                    obj.data.permissions=2;
+                }else{
+                    var test={
+                        permissions:1
+                    }
+                    obj.data.permissions=1;
+                }
+                obj.update(test) //修改当前行数据
+                $.ajax({
+                    url:"/power/updatePermissions?"+new Date().getTime(),
+                    type:'post',
+                    data:JSON.stringify(obj.data),
+                    dataType:'json',
+                    contentType:'application/json',
+                    success:function (data) {
+                        if (data.code==0){
+                            layer.msg("修改成功",{time:500})
+                        }else {
+                            layer.msg("修改失败",{time: 500})
+                        }
+                    }
+                })
+            });
+        });
+    </script>
+    <script type="text/html" id="indexTpl">
+        {{d.LAY_INDEX}}
+    </script>
+</body>
+</html>

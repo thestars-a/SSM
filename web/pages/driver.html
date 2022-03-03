@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>司机管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        .layui-table-cell .layui-form-checkbox[lay-skin="primary"] {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .layui-table-cell {
+            height: auto;
+            line-height: 46px;
+            overflow: visible;
+            text-overflow: inherit;
+            white-space: normal;
+            word-break: break-all;
+
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="username" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">身份证号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="idCard" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除</button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        table.render({
+            elem: '#currentTableId',
+            url: '/driver/getAll',
+            method: 'post',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', width: 100, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                {field: 'username', width: 100, title: '姓名', align: "center"},
+                {field: 'sex', width: 100, title: '性别', align: "center"},
+                {field: 'age', width: 150, title: '年龄', sort: true, align: "center"},
+                {field: 'licenseAndAge', width: 250, title: '驾照类型和驾龄', align: "center"},
+                {field: 'idCard', width: 250, title: '身份证号', align: "center"},
+                {
+                    field: 'driverPicPath', width: 200, title: '照片', align: "center", unresize: true,
+                    templet: function (d) {
+                        return '<img onclick="showimg(this)" id="driimg" style="display: inline-block; width: 50%; height: 100%;" src="' + d.file + '">';
+                    }
+                },
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            request: {
+                pageName: 'curr', //页码的参数名称，默认：page
+                limitName: 'nums' //每页数据量的参数名，默认：limit
+            },
+            limits: [10, 15, 20],
+            page: true,
+            done:function (res) {
+                if (res=="no"){
+                    parent.window.location.href="http://localhost/pages/login.html";
+                }
+            }
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (inputData) {
+            inputData = inputData.field;
+            if (inputData.username == '' && inputData.idCard == '') {
+                window.location.href = "./driver.html";
+            } else {
+                table.reload('currentTableId', {
+                    url: '/driver/searchDriver',
+                    page: {
+                        curr: 1
+                    },
+                    where: {
+                        username: inputData.username,
+                        idCard: inputData.idCard
+                    }
+                });
+                $("input[name='username']").val("");
+                $("input[name='idCard']").val("");
+            }
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        //监听添加和复选框选择删除
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加用户',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: './driverAdd.html',
+                    end: function () {
+                        table.reload('currentTableId', {
+                            page: {
+                                //有个小bug，如果最后一页数据满了，再添加就是新加一页，但跳转不会跳到那个新加的一页
+                                //解决方法获取当页数据发现满了跳转页码要+1，因为懒，这里不解决
+                                curr: $(".layui-laypage-last").html()
+                            }
+                        });
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'delete') {  // 监听删除操作
+                var checkStatus = table.checkStatus('currentTableId')
+                    , data = checkStatus.data;
+                if (data.length == 0) {
+                    layer.msg("您未选中要删除的行，请重试", {time: 1000});
+                } else {
+                    layer.confirm('真的删除选中的行么', function (index) {
+                        $.ajax({
+                            url: '/driver/deleteCheckDriver?' + new Date().getTime(),
+                            type: 'post',
+                            /*restful风格的话就是要传json字符串，不用restful的话就是js对象就行*/
+                            data: JSON.stringify(data),
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            success: function (data) {
+                                if (data.code > 0) {
+                                    layer.msg("删除成功", {time: 500});
+                                    if (checkStatus.isAll) {
+                                        table.reload('currentTableId', {
+                                            page: {
+                                                curr: 1
+                                            }
+                                        });
+                                    } else {
+                                        //执行删除的表格重载
+                                        table.reload('currentTableId');
+                                    }
+                                } else {
+                                    layer.msg("删除失败", {time: 500});
+                                }
+                            }
+                        })
+                        layer.close(index);
+                    });
+                }
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log(obj)
+        });
+
+        //监听操作列(编辑和删除)
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                var index = layer.open({
+                    title: '编辑用户',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: './driverEdit.html',
+                    success: function (layero, index) {
+                        //少了这个是不能从父页面向子页面传值的
+                        var body = layer.getChildFrame('body', index);
+                        //获取子页面的元素，进行数据渲染
+                        body.contents().find("#driverId").val(data.id);
+                        body.contents().find("#chUsername").val(data.username);
+                        body.contents().find("input[name='sex'][value='" + data.sex + "']").prop("checked", "checked");
+                        body.contents().find("#chAge").val(data.age);
+                        body.contents().find("#chLicenseAndAge").val(data.licenseAndAge);
+                        body.contents().find("#chIdCard").val(data.idCard);
+                        body.contents().find("#uploadPreview").attr("src", data.file);
+                    },
+                    end: function () {
+                        table.reload('currentTableId', {
+                            page: {
+                                //当前页码值
+                                curr: $(".layui-laypage-skip").find("input").val()
+                            }
+                        });
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                // console.log(data)
+                layer.confirm('真的删除行么', function (index) {
+                    $.ajax({
+                        url: '/driver/deleteOneDriver?' + new Date().getTime(),
+                        type: 'post',
+                        data: JSON.stringify(data),
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        success: function (data) {
+                            if (data.code == 1) {
+                                layer.msg("删除成功", {time: 500});
+                                table.reload('currentTableId');
+                            } else {
+                                layer.msg("删除失败", {time: 500});
+                            }
+                        }
+                    })
+                    layer.close(index);
+                });
+            }
+        });
+
+    });
+</script>
+
+<!--让表格ID自己增加从1开始-->
+<script type="text/html" id="indexTpl">
+    {{d.LAY_INDEX}}
+</script>
+
+<script>
+    /***
+     * 点击图片放大函数
+     * @param t
+     */
+    function showimg(t) {
+        layer.open({
+            type: 1,
+            title: false,
+            closeBtn: 0,
+            area: '300px',
+            skin: 'layui-layer-nobg', //没有背景色
+            shadeClose: true,
+            content: '<img style="display: block;top: 100px; width: 100%; height: 100%;" src="' + t.src + '">'
+        });
+    }
+</script>
+</body>
+</html>

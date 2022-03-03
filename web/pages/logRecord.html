@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        body{
+            background-color: #ffffff;
+        }
+
+        .ljwm{
+            position: relative;
+            width: 800px;
+            margin: 0 auto;
+        }
+
+        .layui-timeline{
+            position: absolute;
+            left: 20%;
+            margin-top:5px;
+        }
+
+        p{
+            font-size: 25px;
+            letter-spacing :3px;
+            line-height: 55px;
+            font-family: '楷体', '微软雅黑';
+        }
+
+        .mycss{
+            margin-top: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ljwm">
+        <ul class="layui-timeline"></ul>
+    </div>
+
+
+    <script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use([], function () {
+            var $ = layui.jquery;
+            $.ajax({
+                url:'/logRecord/getLogRecord',
+                type:'post',
+                success:function (data) {
+                    // console.log(data)
+                    for (var i =0;i<data.data.length;i++){
+                        $('.layui-timeline').append('<li class="layui-timeline-item mycss"><i class="layui-icon layui-timeline-axis">&#xe63f;</i><div class="layui-timeline-content layui-text"><h1 class="layui-timeline-title">'+data.data[i].createTime+'</h1><p>'+data.data[i].username+'通过了'+data.data[i].operation+'方法'+data.data[i].content+'<br>'+'其IP为:'+data.data[i].optIp+'</p></div></li>');
+                    }
+                }
+            })
+        });
+    </script>
+</body>
+</html>

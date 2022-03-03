@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>table下拉选择器</title>
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        .layui-table-cell .layui-form-checkbox[lay-skin="primary"] {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .layui-table-cell {
+            height: auto;
+            line-height: 46px;
+            overflow: visible;
+            text-overflow: inherit;
+            white-space: normal;
+            word-break: break-all;
+
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <form class="layui-form" action="" style="padding:20px;">
+            <div class="layui-form-item">
+                <label class="layui-form-label ">司机选择</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="driverCheck" lay-verify="required" width="300px" name="driverCheck" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item" style="margin-top: 50px">
+                <label class="layui-form-label" >汽车选择</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="carCheck" lay-verify="required" width="300px" name="carCheck" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <a class="layui-btn layui-btn-normal" lay-submit="" lay-filter="saveBtn">确认保存</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+    layui.use(['table', 'form', 'tableSelect'], function () {
+        var $ = layui.jquery,
+            table = layui.table,
+            form = layui.form,
+            tableSelect = layui.tableSelect;
+
+
+        tableSelect.render({
+            elem: '#driverCheck',
+            checkedKey: 'id',
+            height:'500',
+            width:'1000',
+            searchType: 'more',
+            searchList: [
+                {searchKey: 'username', searchPlaceholder: '搜索司机姓名'},
+                {searchKey: 'idCard', searchPlaceholder: '搜索司机身份证号'},
+            ],
+            table: {
+                url: '/assign/getDriverByCondition',
+                method: 'post',
+                cols: [[
+                    { type: 'radio' },
+                    {field: 'id', width: 100, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                    {field: 'username', width: 100, title: '姓名', align: "center"},
+                    {field: 'sex', width: 100, title: '性别', align: "center"},
+                    {field: 'age', width: 150, title: '年龄', sort: true, align: "center"},
+                    {field: 'licenseAndAge', width: 250, title: '驾照类型和驾龄', align: "center"},
+                    {field: 'idCard', width: 250, title: '身份证号', align: "center"},
+                    {
+                        field: 'driverPicPath', width: 200, title: '照片', align: "center", unresize: true,
+                        templet: function (d) {
+                            return '<img onclick="showimg(this)" id="driimg" style="display: inline-block; width: 50%; height: 100%;" src="' + d.file + '">';
+                        }
+                    }
+                ]],
+                request: {
+                    pageName: 'curr', //页码的参数名称，默认：page
+                    limitName: 'nums' //每页数据量的参数名，默认：limit
+                },
+                limits: [10, 15, 20],
+                page: true
+            },
+            done: function (elem, data) {
+                var NEWJSON = []
+                layui.each(data.data, function (index, item) {
+                    NEWJSON.push(item.username)
+                    NEWJSON.push(item.idCard)
+                })
+                elem.val(NEWJSON.join(","))
+            }
+        })
+
+        tableSelect.render({
+            elem: '#carCheck',
+            checkedKey: 'id',
+            height:'400',
+            width:'1000',
+            searchType: 'more',
+            searchList: [
+                {searchKey: 'carName', searchPlaceholder: '搜索车名'},
+                {searchKey: 'licenseLateNumber', searchPlaceholder: '搜索车牌号'},
+            ],
+            table: {
+                url: '/assign/getCarByCondition',
+                method: 'post',
+                cols: [[
+                    { type: 'radio' },
+                    {field: 'id', width: 100, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                    {field: 'carName', width: 100, title: '名字', align: "center"},
+                    {field: 'carType', width: 100, title: '类型', align: "center"},
+                    {field: 'licenseLateNumber', width: 150, title: '牌号', align: "center"},
+                    {field: 'Text', width: 400, title: '描述', align: "center"},
+                    {field: 'state', width: 100, title: '状态', align: "center"},
+                    {
+                        field: 'carPicPath', width: 200, title: '照片', align: "center", unresize: true,
+                        templet: function (d) {
+                            return '<img onclick="showimg(this)" id="driimg" style="display: inline-block; width: 50%; height: 100%;" src="' + d.file + '">';
+                        }
+                    }
+                ]],
+                request: {
+                    pageName: 'curr', //页码的参数名称，默认：page
+                    limitName: 'nums' //每页数据量的参数名，默认：limit
+                },
+                limits: [10, 15, 20],
+                page: true,
+                done: function () {
+                    $(".layui-table-main tr").each(function (index, val) {
+                        $($(".layui-table-fixed-l .layui-table-body tbody tr")[index]).height($(val).height());
+                        $($(".layui-table-fixed-r .layui-table-body tbody tr")[index]).height($(val).height());
+                    });
+                },
+            },
+            done: function (elem, data) {
+                var NEWJSON = []
+                layui.each(data.data, function (index, item) {
+                    NEWJSON.push(item.carName)
+                    NEWJSON.push(item.licenseLateNumber)
+                })
+                elem.val(NEWJSON.join(","))
+            }
+        })
+
+        //监听提交
+        form.on('submit(saveBtn)', function (inputData) {
+            inputData=inputData.field;
+            var driver = inputData.driverCheck.split(",");
+            var car = inputData.carCheck.split(",");
+            var data ={
+                id:0,
+                driverUsername:driver[0],
+                driverIdCard:driver[1],
+                carName:car[0],
+                carLicenseLateNumber:car[1],
+                profit:0.0
+            }
+            // console.log(data);
+            function getCookie(name) {
+                var prefix = name + "="
+                var start = document.cookie.indexOf(prefix)
+                if (start == -1) {return null;}
+                var end = document.cookie.indexOf(";", start + prefix.length)
+                if (end == -1) {
+                    end = document.cookie.length;
+                }
+                var value = document.cookie.substring(start + prefix.length, end)
+                return unescape(value);
+            }
+            let power = getCookie("power");
+            if (power=="2"){
+                layer.msg("抱歉您的权限不足无法分配");
+                $("#driverCheck").val("");
+                $("#carCheck").val("");
+            }else{
+                $.ajax({
+                    url:'/assign/saveAssign?'+new Date().getTime(),
+                    type:'post',
+                    data:JSON.stringify(data),
+                    dataType:'json',
+                    contentType:'application/json',
+                    success:function (data) {
+                        if (data.code==1){
+                            layer.msg("添加成功",{time:500},function () {
+                                $("#driverCheck").val("");
+                                $("#carCheck").val("");
+                                localStorage.setItem("key",generateUUID())
+                            })
+                        }else {
+                            layer.msg("添加失败",{time: 500});
+                        }
+                    }
+                })
+            }
+            return false;
+        });
+
+        function generateUUID() {
+            var d = new Date().getTime();
+            if (window.performance && typeof window.performance.now === "function") {
+                d += performance.now(); //use high-precision timer if available
+            }
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid;
+        }
+    });
+</script>
+<!--让表格ID自己增加从1开始-->
+<script type="text/html" id="indexTpl">
+    {{d.LAY_INDEX}}
+</script>
+</body>
+</html>

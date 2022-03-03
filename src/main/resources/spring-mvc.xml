@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       ">
+
+    <!--springMVC的四大核心组件：前端控制器DispatcherServlet，处理器映射器HandlerMapping，
+                              处理器适配器HandlerAdaptor，视图解析器ViewResolver-->
+
+
+    <!--开启注解扫描-->
+    <context:component-scan base-package="com.zhang.controller"/>
+
+    <!--mvc注解驱动
+        会自动注册RequestMappingHandlerMapping 、RequestMappingHandlerAdapter
+        与ExceptionHandlerExceptionResolver 三个bean。-->
+    <mvc:annotation-driven>
+        <!--自动进行json的格式转换-->
+        <mvc:message-converters>
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes" value="application/json;charset=utf-8"/>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!--tomcat容器的web.xml中有一个defaultServlet(用于处理静态资源)，映射路径是"/"，
+    我们自定义的web.xml最终相当于会与容器的web.xml合并，而自定义DispatchServlet一般也是使用"/"，
+    导致容器中的defaultServlet被覆盖，从而静态资源请求也会被发送到springmvc，
+    springmvc会去找这个路径的映射器(相当于对应的Controller，这是找不到的)，
+    配置这个<mvc:default-servlet-handler>，应该就是在SpringMvc找不到映射路径后，再将其转给tomcat的defaultServlet，
+    这时tomcat就可以正确解析静态资源路径。-->
+    <mvc:default-servlet-handler/>
+
+
+    <!-- 配置拦截器 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 拦截所有mvc控制器-->
+            <mvc:mapping path="/**"/>
+            <!--mvc:exclude-mapping是另外一种拦截，它可以在你后来的测试中对某个页面进行不拦截-->
+            <mvc:exclude-mapping path="http://localhost/pages/welcome.html"/>
+            <mvc:exclude-mapping path="http://localhost/pages/login.html"/>
+            <mvc:exclude-mapping path="/system/getCaptchaImage"/>
+            <mvc:exclude-mapping path="/system/login"/>
+            <mvc:exclude-mapping path="/index.html"/>
+            <bean class="com.zhang.interceptor.LoginInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--
+		自动代理方式
+		proxy-target-class="true" - 使用cglib动态代理
+		proxy-target-class="false"  - 使用jdk动态代理
+		默认jdk，spring是使用cglib的，需要改为true（经过测试，使用false也可以正常运行）
+	 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+
+
+    <!--文件上传-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 请求的编码格式，必须和jSP的pageEncoding属性一致，以便正确读取表单的内容，
+        默认为ISO-8859-1 -->
+        <property name="defaultEncoding" value="utf-8"/>
+        <!-- 上传文件大小上限，单位为字节（10485760=10M） -->
+        <property name="maxUploadSize" value="10485760"/>
+    </bean>
+
+    <!--配置视图解析器-->
+<!--    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/pages/"/>
+        <property name="suffix" value=".html"/>
+    </bean>-->
+</beans>

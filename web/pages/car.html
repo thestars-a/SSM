@@ -1,0 +1,338 @@
+
+
+<!--
+    两个bug，一：编辑的时候下拉框不能动态赋值（目前怀疑jquery版本问题）
+            二：添加的时候弹出层不能最大化（暂无思路）
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>车管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../static/css/public.css" media="all">
+    <style>
+        .layui-table-cell .layui-form-checkbox[lay-skin="primary"] {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .layui-table-cell {
+            height: auto;
+            line-height: 46px;
+            overflow: visible;
+            text-overflow: inherit;
+            white-space: normal;
+            word-break: break-all;
+
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">名字</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="carName" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">车牌号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="licenseLateNumber" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除</button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs" style="background-color: #8D8D8D"
+               lay-event="detail">查看</a>
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="../static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var form = layui.form,
+            table = layui.table,
+            $ = layui.$;
+
+        table.render({
+            elem: '#currentTableId',
+            url: '/car/getAll',
+            method: 'post',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', width: 100, title: 'ID', toolbar: '#indexTpl', align: "center"},
+                {field: 'carName', width: 100, title: '名字', align: "center"},
+                {field: 'carType', width: 100, title: '类型', align: "center"},
+                {field: 'licenseLateNumber', width: 150, title: '牌号', align: "center"},
+                {field: 'Text', width: 400, title: '描述', align: "center"},
+                {field: 'state', width: 100, title: '状态', align: "center"},
+                {
+                    field: 'carPicPath', width: 200, title: '照片', align: "center", unresize: true,
+                    templet: function (d) {
+                        return '<img onclick="showimg(this)" id="driimg" style="display: inline-block; width: 50%; height: 100%;" src="' + d.file + '">';
+                    }
+                },
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            request: {
+                pageName: 'curr', //页码的参数名称，默认：page
+                limitName: 'nums' //每页数据量的参数名，默认：limit
+            },
+            limits: [10, 15, 20],
+            page: true,
+            done: function (res) {
+                // console.log(res)
+                if (res=="no"){
+                    parent.window.location.href="http://localhost/pages/login.html";
+                }
+                $(".layui-table-main tr").each(function (index, val) {
+                    $($(".layui-table-fixed-l .layui-table-body tbody tr")[index]).height($(val).height());
+                    $($(".layui-table-fixed-r .layui-table-body tbody tr")[index]).height($(val).height());
+                });
+            },
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (inputData) {
+            inputData = inputData.field;
+            if (inputData.carName == '' && inputData.licenseLateNumber == '') {
+                window.location.href = "./car.html";
+            } else {
+                table.reload('currentTableId', {
+                    url: '/car/searchCar',
+                    page: {
+                        curr: 1
+                    },
+                    where: {
+                        carName: inputData.carName,
+                        licenseLateNumber: inputData.licenseLateNumber
+                    },
+                });
+                $("input[name='carName']").val("");
+                $("input[name='licenseLateNumber']").val("");
+            }
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        //监听添加和复选框选择删除
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加车信息',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    zIndex: 999,
+                    offset: '100px',
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: './carAdd.html',
+                    end: function () {
+                        table.reload('currentTableId', {
+                            page: {
+                                //有个小bug，如果最后一页数据满了，再添加就是新加一页，但跳转不会跳到那个新加的一页
+                                //解决方法获取当页数据发现满了跳转页码要+1，因为懒，这里不解决
+                                curr: $(".layui-laypage-last").html()
+                            }
+                        });
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'delete') {  // 监听删除操作
+                var checkStatus = table.checkStatus('currentTableId')
+                    , data = checkStatus.data;
+                if (data.length == 0) {
+                    layer.msg("您未选中要删除的行，请重试", {time: 1000});
+                } else {
+                    layer.confirm('真的删除选中的行么', function (index) {
+                        $.ajax({
+                            url: '/car/deleteCheckCar?' + new Date().getTime(),
+                            type: 'post',
+                            data: JSON.stringify(data),
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            success: function (data) {
+                                if (data.code > 0) {
+                                    layer.msg("删除成功", {time: 500});
+                                    if (checkStatus.isAll) {
+                                        table.reload('currentTableId', {
+                                            page: {
+                                                curr: 1
+                                            }
+                                        });
+                                    } else {
+                                        //执行删除的表格重载
+                                        table.reload('currentTableId');
+                                    }
+                                } else {
+                                    layer.msg("删除失败", {time: 500});
+                                }
+                            }
+                        });
+                        layer.close(index);
+                    });
+                }
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log(obj)
+        });
+
+        //监听操作列(编辑和删除)
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            // console.log(data);
+            // console.log(data.carType);
+            // console.log(data.state);
+            if (obj.event === 'edit') {
+                var index = layer.open({
+                    title: '编辑车信息',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: './carEdit.html',
+                    success: function (layero, index) {
+                        //少了这个是不能从父页面向子页面传值的
+                        var body = layer.getChildFrame('body', index);
+                        //获取子页面的元素，进行数据渲染
+                        body.contents().find("#carId").val(data.id);
+                        body.contents().find("#chCarName").val(data.carName);
+                        body.contents().find("#chCarType").val(data.carType)
+                        body.contents().find("#chLicenseLateNumber").val(data.licenseLateNumber);
+                        body.contents().find("#chText").val(data.Text);
+                        body.contents().find("#chState").val(data.state);
+                        body.contents().find("#uploadPreview").attr("src", data.file);
+                    },
+                    end: function () {
+                        table.reload('currentTableId', {
+                            page: {
+                                //当前页码值
+                                curr: $(".layui-laypage-skip").find("input").val()
+                            }
+                        });
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'detail') {
+                var index = layer.open({
+                    title: '查看车信息',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: './carDetail.html',
+                    success: function (layero, index) {
+                        //少了这个是不能从父页面向子页面传值的
+                        var body = layer.getChildFrame('body', index);
+                        //获取子页面的元素，进行数据渲染
+                        body.contents().find("#carId").val(data.id);
+                        body.contents().find("#chCarName").val(data.carName);
+                        body.contents().find("#chCarType").val(data.carType);
+                        body.contents().find("#chLicenseLateNumber").val(data.licenseLateNumber);
+                        body.contents().find("#chText").val(data.Text);
+                        body.contents().find("#chState").val(data.state);
+                        body.contents().find("#uploadPreview").attr("src", data.file);
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                // console.log(data)
+                layer.confirm('真的删除行么', function (index) {
+                    $.ajax({
+                        url: '/car/deleteOneCar?' + new Date().getTime(),
+                        type: 'post',
+                        data: JSON.stringify(data),
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        success: function (data) {
+                            if (data.code == 1) {
+                                layer.msg("删除成功", {time: 500});
+                                table.reload('currentTableId');
+                            } else {
+                                layer.msg("删除失败", {time: 500});
+                            }
+                        }
+                    })
+                    layer.close(index);
+                });
+            }
+        })
+
+    });
+</script>
+
+<!--让表格ID自己增加从1开始-->
+<script type="text/html" id="indexTpl">
+    {{d.LAY_INDEX}}
+</script>
+
+<script>
+    /***
+     * 点击图片放大函数
+     * @param t
+     */
+    function showimg(t) {
+        layer.open({
+            type: 1,
+            title: false,
+            closeBtn: 0,
+            area: '600px',
+            skin: 'layui-layer-nobg', //没有背景色
+            shadeClose: true,
+            content: '<img style="display: inline-block; width: 100%; height: 100%;" src="' + t.src + '">',
+        });
+    }
+</script>
+</body>
+</html>

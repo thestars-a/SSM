@@ -1,0 +1,44 @@
+{
+  "homeInfo": {
+    "title": "首页",
+    "href": "/pages/welcome.html"
+  },
+  "logoInfo": {
+    "title": "  车  之  家",
+    "image": "/static/images/logo.png",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "司机管理",
+      "href": "/pages/driver.html",
+      "icon": "fa fa-id-card-o",
+      "target": "_self"
+    },
+    {
+      "title": "车管理",
+      "href": "/pages/car.html",
+      "icon": "fa fa-car",
+      "target": "_self"
+    },
+    {
+      "title": "分配管理",
+      "icon": "fa fa-connectdevelop",
+      "target": "_self",
+      "child": [
+        {
+          "title": "已分配管理",
+          "href": "/pages/assigned.html",
+          "icon": "fa fa-check-circle",
+          "target": "_self"
+        },
+        {
+          "title": "未分配管理",
+          "href": "/pages/assign.html",
+          "icon": "fa fa-times-circle",
+          "target": "_self"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        @keyframes move {
+            0% {
+                background-size: 100% 100%;
+                background-position: 0 0;
+            }
+
+            50% {
+                background-size: 300% 150%;
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-size: 100% 100%;
+                background-position: 0% 0%;
+            }
+        }
+        body{
+            font-family: "楷体";
+            overflow: hidden;
+            background-color: #d0dbec;
+        }
+        .box .top {
+            height: 210px;
+            position: relative;
+        }
+        .box .top .go button{
+            width: 140px;
+            height: 50px;
+            background: -webkit-linear-gradient(162deg, #fa9191 0%, #b491fd 100%);
+            background: linear-gradient(288deg, #fa9191 0%, #b491fd 100%);
+            -webkit-background-clip: text;  
+            color: transparent; 
+            color:#23b7cb;
+            background-color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px transparent solid;
+            border-radius: 40px;
+            position: relative;
+
+        }
+        .box .top .go button:after{
+            content:'';
+            position: absolute;
+            top: -3px; bottom: -3px;
+            left: -3px; right: -3px;
+            background: linear-gradient(135deg,#979595 0%, #1e69f5 50%, #e00af3 100%);
+            border-radius: 30px;
+            content: '';
+            z-index: -1;
+        }
+        .box .top span {
+            width: 400px;
+            height: 210px;
+            background: -webkit-linear-gradient(162deg, #979595 0%, #1e69f5 50%, #e00af3 100%);
+            background: linear-gradient(288deg, #979595 0%, #1e69f5 50%, #e00af3 100%);
+            -webkit-background-clip: text;
+            animation: move 3s linear infinite;
+            color: transparent;
+            position: absolute;
+            left: 50%;
+            margin-left: -200px;
+            font-size: 80px;
+
+        }
+        .box .bottom{
+            width: 100%;
+            height: 390px;
+            position: relative;
+        }
+        .box .bottom .account{
+            width: 1000px;
+            height: 400px;
+            background:transparent;
+            color:#23b7cb;
+            font-size:15px;
+            border:4px transparent solid;
+            border-image:linear-gradient(to right,#979595 0%, #1e69f5 50%, #e00af3 100%) 1 10;
+            position: absolute;
+            top: 50%;
+            margin-top: -180px;
+            left: 50%;
+            margin-left: -500px;
+        }
+        .box .bottom .account .heading{
+            width: 120px;
+            height: 400px;
+            float: left;
+            border-right: 4px transparent solid;
+            border-image:linear-gradient(to right,#979595 0%, #1e69f5 50%, #e00af3 100%) 1 10;
+	        writing-mode: vertical-rl;
+            text-align: center;
+            line-height: 120px;
+            font-size: 40px;
+        }
+        .box .bottom .account .text{
+            width: 600px;
+            height: 90px;
+            font-size: 24px;
+            padding-top: 160px;
+            padding-left: 281px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="top">
+            <span>
+                车&nbsp;&nbsp;之&nbsp;&nbsp;家<br>
+                &nbsp;&nbsp;欢迎你
+            </span>
+        </div>
+        <div class="bottom">
+            <div class="account">
+                <div class="heading">车之家概述</div>
+                <div class="text">
+                    &nbsp;&nbsp;&nbsp;&nbsp;车之家是将各种车分配于员工，员工利用所车的特性去盈利，从而为公司盈利。本平台专为车之家管理人员打造，方便管理者管理员工，车以及两者的分配,同时管理者的操作都会被记录下来，且不可修改，防止不良举动。
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

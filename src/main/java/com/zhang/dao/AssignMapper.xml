@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhang.dao.AssignMapper">
+    <select id="getAllAssigned" resultType="assign">
+        select id,driver_username driverUsername,driver_id_card driverIdCard,
+        car_name carName,car_license_late_number carLicenseLateNumber,
+        profit
+        from assign limit #{curr},#{nums};
+    </select>
+
+    <select id="getAllAssignedNoCondition" resultType="assign">
+        select id,driver_username driverUsername,driver_id_card driverIdCard,
+        car_name carName,car_license_late_number carLicenseLateNumber,
+        profit
+        from assign;
+    </select>
+
+    <select id="getCountOfAssigned" resultType="Integer">
+        select count(*) from assign;
+    </select>
+
+    <delete id="deleteOneAssign">
+        delete from assign where id =#{id};
+    </delete>
+
+    <select id="searchAssigned" resultType="assign">
+        select id,driver_username driverUsername,driver_id_card driverIdCard,
+        car_name carName,car_license_late_number carLicenseLateNumber,profit
+        from assign
+        <where>
+            <if test="driverIdCard!=null and driverIdCard!=''">
+                driver_id_card = #{driverIdCard}
+            </if>
+            <if test="carLicenseLateNumber!=null and carLicenseLateNumber!=''">
+                and car_license_late_number=#{carLicenseLateNumber}
+            </if>
+        </where>
+    </select>
+
+    <select id="getDriverByCondition" resultType="driver" parameterType="java.util.List">
+        select id,username,sex,age,
+        license_and_age licenseAndAge,id_card idCard,driver_pic_path driverPicPath
+        from driver where id_card not in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.driverIdCard}
+        </foreach>
+        limit #{curr},#{nums};
+    </select>
+
+
+    <select id="getAllRightDriverCount" resultType="Integer" parameterType="java.util.List">
+        select count(*)
+        from driver where id_card not in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.driverIdCard}
+        </foreach>;
+    </select>
+
+    <select id="searchDriver" resultType="driver">
+        select id,username,sex,age,
+        license_and_age licenseAndAge,id_card idCard,driver_pic_path driverPicPath from driver
+        <where>
+            <if test="username!=null and username!=''">
+                username=#{username}
+            </if>
+            <if test="idCard!=null and idCard!=''">
+                and id_card=#{idCard}
+            </if>
+        </where>
+    </select>
+
+    <select id="getCarByCondition" resultType="car">
+        select id,car_name carName,car_type carType,license_late_number licenseLateNumber,
+               car_describe carDescribe,state,car_pic_path carPicPath
+        from car where state='未分配' limit #{curr},#{nums};
+    </select>
+
+    <select id="getAllRightCarCount" resultType="Integer">
+        select count(*)
+        from car where state='未分配';
+    </select>
+
+    <select id="searchCar" resultType="car">
+        select id,car_name carName,car_type carType,license_late_number licenseLateNumber,
+        car_describe carDescribe,state,car_pic_path carPicPath from  car
+        <where>
+            <if test="carName!=null and carName!=''">
+                car_name=#{carName}
+            </if>
+            <if test="licenseLateNumber!=null and licenseLateNumber!=''">
+                and license_late_number=#{licenseLateNumber}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addOneAssign" parameterType="assign">
+        insert into assign(driver_username,driver_id_card,
+        car_name,car_license_late_number,profit)
+        values (#{driverUsername},#{driverIdCard},#{carName},#{carLicenseLateNumber},#{profit})
+    </insert>
+
+    <update id="updateCarState">
+        update  car set state='已分配' where license_late_number=#{licenseLateNumber};
+    </update>
+    <update id="updateCarState2">
+        update  car set state='未分配' where license_late_number=#{licenseLateNumber};
+    </update>
+
+    <update id="updateProfit">
+        update assign set profit = #{profit} where id = #{id}
+    </update>
+</mapper>
